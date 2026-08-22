@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Editor Panel · Cornerstone Guides</title>
+<script
+  async
+  crossorigin="anonymous"
+  src="https://clerk.cornerstoneguides.org/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsuY29ybmVyc3RvbmVndWlkZXMub3JnJA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<script>
+  window.MathJax = {
+    tex: { inlineMath: [["$", "$"]] },
+    svg: { fontCache: "global" }
+  };
+</script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+<script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
+<style>
+  :root {
+    --page-bg: #EBF0F3;
+    --grid-line: #D1DADC;
+    --card: #FFFFFF;
+    --pill-bg: #E6EBF0;
+    --pill-border: #D0D7DE;
+    --ink: #1F2328;
+    --muted: #57606A;
+    --accent: #2c3e50;
+    --accent-hover: #1f2c38;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    background-color: var(--page-bg);
+    background-image:
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+    background-size: 20px 20px;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", sans-serif;
+    color: var(--ink);
+    min-height: 100vh;
+  }
+  a { color: inherit; text-decoration: none; }
+  button { font-family: inherit; }
+
+  /* Header — identical markup/CSS to the rest of the site (_layouts/default.html)
+     so the nav and profile UI sit in the same place on every page. */
+  header.nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 28px;
+    background: var(--card);
+    border-bottom: 1px solid var(--pill-border);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; text-decoration: none; color: var(--ink); }
+  .brand .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--accent); display: inline-block; }
+  nav.links { display: flex; gap: 18px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  nav.links a { text-decoration: none; }
+  nav.links a:hover, nav.links a.active { color: var(--ink); }
+  .search-wrap { flex: 1; display: flex; justify-content: center; }
+  .avatar-wrap { position: relative; }
+  .avatar-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dropdown {
+    position: absolute; right: 0; top: 42px;
+    background: var(--card); border: 1px solid var(--pill-border);
+    border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    min-width: 260px; display: none; overflow: hidden;
+    font-size: 14px;
+  }
+  .dropdown.open { display: block; }
+  .dropdown-user { padding: 10px 14px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--pill-border); }
+  .staff-star { color: #d4a017; }
+  .dropdown a, .dropdown button.link {
+    display: block; width: 100%; text-align: left;
+    padding: 10px 14px; background: none; border: none; cursor: pointer; font-size: 14px; text-decoration: none; color: var(--ink);
+  }
+  .dropdown a:hover, .dropdown button.link:hover { background: var(--page-bg); }
+
+  main { max-width: 900px; margin: 0 auto; padding: 20px 24px 160px; position: relative; }
+
+  #sign-in-view h1 { font-size: 20px; margin-bottom: 4px; }
+  #sign-in-view p { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+
+  #list-view { display: none; }
+  .list-header { display: flex; justify-content: space-between; align-items: center; margin: 12px 0 20px; }
+  .list-header h1 { font-size: 26px; font-weight: 700; margin: 0; }
+  .btn {
+    padding: 10px 18px; font-size: 13px; font-weight: 600; border-radius: 20px; border: 1px solid var(--pill-border);
+    background: var(--pill-bg); color: var(--ink); cursor: pointer;
+  }
+  .btn:hover { background: #dbe2e8; }
+  .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn.primary:hover { background: var(--accent-hover); }
+  .btn.danger { background: #fbe8e6; color: #b3261e; border-color: #f2c6c2; }
+  .btn.danger:hover { background: #f6d4d0; }
+
+  .guide-card-row {
+    background: var(--card); border-radius: 14px; padding: 16px 20px; margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04); border: 1px solid #EEF1F4;
+  }
+  .guide-card-row .title { font-weight: 600; font-size: 15px; }
+  .guide-card-row .meta { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  .tag-mini {
+    display: inline-block; background: var(--pill-bg); border: 1px solid var(--pill-border);
+    border-radius: 10px; padding: 1px 8px; font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; margin-right: 4px;
+  }
+  .guide-card-row .actions { display: flex; gap: 8px; }
+  .guide-card-row .actions button { padding: 7px 14px; font-size: 12px; }
+
+  #editor-view { display: none; }
+  .doc-card {
+    background: var(--card); border-radius: 16px; padding: 40px 48px 90px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.06); position: relative; margin-top: 40px;
+  }
+
+  .toast {
+    position: absolute; top: -22px; left: 50%; transform: translateX(-50%);
+    background: var(--pill-bg); border: 1px solid var(--pill-border); border-radius: 999px;
+    padding: 8px 10px 8px 18px; display: flex; align-items: center; gap: 12px;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08); font-size: 13px; color: var(--ink);
+    white-space: nowrap; z-index: 15; opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .toast.show { opacity: 1; pointer-events: auto; }
+  .toast button.undo {
+    background: #fff; border: 1px solid var(--pill-border); border-radius: 999px; padding: 5px 12px;
+    font-size: 12px; font-weight: 700; cursor: pointer; box-shadow: inset 0 1px 0 rgba(255,255,255,0.6);
+  }
+  .toast button.undo:hover { background: #f2f2f2; }
+
+  .doc-title {
+    font-size: 30px; font-weight: 700; outline: none; border: none; width: 100%;
+    margin-bottom: 4px; line-height: 1.25;
+  }
+  .doc-title:empty::before { content: attr(data-placeholder); color: #b7bfc7; }
+  .doc-byline { font-size: 12px; color: var(--muted); margin-bottom: 22px; }
+
+  .meta-row { display: flex; gap: 26px; margin-bottom: 32px; flex-wrap: wrap; }
+  .meta-field .meta-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); margin-bottom: 6px; }
+  .meta-field .meta-sub { font-size: 10px; color: #98a1ab; margin-top: 4px; }
+  .permalink-input {
+    font-size: 13px; padding: 8px 14px; border-radius: 20px; border: 1px solid var(--pill-border);
+    background: var(--pill-bg); color: var(--ink); min-width: 260px;
+  }
+  .tag-select-wrap { position: relative; }
+  .tag-pill-display {
+    display: inline-flex; align-items: center; gap: 6px; background: var(--pill-bg);
+    border: 1px solid var(--pill-border); border-radius: 20px; padding: 6px 8px 6px 14px;
+    font-size: 12px; font-weight: 600; letter-spacing: 0.03em; text-transform: uppercase; cursor: pointer;
+  }
+  .tag-pill-display .x { color: var(--muted); font-weight: 700; padding: 0 2px; }
+  .tag-pill-display .x:hover { color: #b3261e; }
+  .tag-dropdown {
+    position: absolute; top: 34px; left: 0; background: #fff; border: 1px solid var(--pill-border);
+    border-radius: 10px; box-shadow: 0 8px 20px rgba(0,0,0,0.1); min-width: 180px; z-index: 20; display: none;
+    font-size: 13px; overflow: hidden;
+  }
+  .tag-dropdown.open { display: block; }
+  .tag-dropdown div { padding: 9px 14px; cursor: pointer; }
+  .tag-dropdown div:hover { background: var(--page-bg); }
+  .tag-dropdown input {
+    width: 100%; border: none; border-bottom: 1px solid var(--pill-border); padding: 9px 14px; font-size: 13px; outline: none;
+  }
+
+  #doc-body { font-size: 15px; line-height: 1.6; outline: none; min-height: 200px; }
+  #doc-body p { margin: 0 0 14px; }
+  #doc-body h2 { font-size: 20px; font-weight: 600; margin: 26px 0 10px; }
+  #doc-body h3, #doc-body h4 { font-weight: 600; margin: 20px 0 8px; }
+  #doc-body ul, #doc-body ol { margin: 0 0 14px 20px; padding: 0; }
+  #doc-body img.embedded-image { max-width: 100%; border-radius: 10px; margin: 14px 0; display: block; }
+  #doc-body [contenteditable="false"] { user-select: none; }
+
+  .block-card {
+    background: #fff; border: 1px solid #E1E4E8; border-radius: 12px; padding: 18px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin: 18px 0 6px;
+  }
+  .desmos-mount { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; }
+  .desmos-error {
+    width: 100%; height: 280px; border-radius: 8px; background: var(--page-bg);
+    border: 1px dashed var(--pill-border); display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; font-size: 13px; color: var(--muted);
+  }
+  .sketch-canvas { width: 100%; height: 260px; border-radius: 8px; background: #fff; touch-action: none; cursor: crosshair; border: 1px solid #EEF1F4; }
+  .sketch-tools { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sketch-tools button { padding: 5px 10px; font-size: 11px; border-radius: 8px; border: 1px solid var(--pill-border); background: var(--pill-bg); cursor: pointer; }
+  .sketch-tools button.tool.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .sketch-tools .sketch-sep { width: 1px; height: 18px; background: var(--pill-border); margin: 0 2px; }
+  .sketch-tools input[type="color"] { width: 26px; height: 26px; padding: 0; border: 1px solid var(--pill-border); border-radius: 6px; background: none; cursor: pointer; }
+  .sketch-tools input[type="range"] { width: 70px; }
+  .sketch-tools .sketch-width-label { font-size: 10px; color: var(--muted); min-width: 20px; text-align: right; }
+  .block-footer { display: flex; align-items: center; gap: 10px; margin: 8px 2px 20px; flex-wrap: wrap; }
+  .block-tag {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: var(--muted); text-transform: uppercase;
+  }
+  .block-footer .edit-toggle {
+    font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 14px; border: 1px solid var(--pill-border);
+    background: var(--pill-bg); cursor: pointer;
+  }
+  .block-footer .caption-input {
+    font-size: 12px; color: var(--muted); border: none; background: none; outline: none; flex: 1; min-width: 120px;
+  }
+  .block-footer .caption-input::placeholder { color: #b7bfc7; }
+  .block-remove { margin-left: auto; font-size: 11px; color: #b3261e; cursor: pointer; background: none; border: none; }
+
+  .bottom-toolbar {
+    position: fixed; left: 50%; bottom: 26px; transform: translateX(-50%);
+    background: #fff; border: 1px solid var(--pill-border); border-radius: 30px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.1); padding: 8px 14px;
+    display: flex; align-items: center; gap: 6px; z-index: 25; max-width: 92vw; overflow-x: auto;
+  }
+  .bottom-toolbar button.icon-btn {
+    width: 32px; height: 32px; border-radius: 8px; border: none; background: none; cursor: pointer;
+    font-size: 13px; font-weight: 700; color: var(--ink); display: flex; align-items: center; justify-content: center;
+  }
+  .bottom-toolbar button.icon-btn:hover { background: var(--page-bg); }
+  .bottom-toolbar .sep { width: 1px; height: 22px; background: var(--pill-border); margin: 0 4px; }
+  .bottom-toolbar select {
+    border: 1px solid var(--pill-border); border-radius: 8px; font-size: 12px; padding: 5px 6px; background: #fff; color: var(--ink);
+  }
+  .bottom-toolbar .latex-btn, .bottom-toolbar .media-btn {
+    font-size: 12px; font-weight: 600; padding: 6px 12px; border-radius: 16px; border: none; background: var(--pill-bg); cursor: pointer;
+  }
+  .bottom-toolbar .latex-btn:hover, .bottom-toolbar .media-btn:hover { background: #dbe2e8; }
+  .save-status { font-size: 12px; font-weight: 600; color: var(--muted); margin-left: 6px; white-space: nowrap; }
+  .save-status[data-state="dirty"] { color: #9a6700; }
+  .save-status[data-state="saving"] { color: var(--muted); }
+  .save-status[data-state="saved"] { color: #1a7f37; }
+  .save-status[data-state="error"] { color: #b3261e; }
+  #save-guide-btn:disabled { opacity: 0.6; cursor: default; }
+  #save-guide-btn:disabled:hover { background: var(--accent); }
+
+  .field-row { display: flex; gap: 16px; align-items: center; margin: 10px 0 24px; }
+  .publish-toggle { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/"><span class="dot"></span> Cornerstone</a>
+  <nav class="links">
+    <a href="/">Home</a>
+    <a href="/archive">Archive</a>
+    <a href="/guides">Guides</a>
+    <!-- Games temporarily hidden — re-add <a href="/games.html">Games</a> to re-enable -->
+    <a href="#" id="nav-guides-link" class="active">All guides</a>
+  </nav>
+  <div class="search-wrap"></div>
+  <div class="avatar-wrap">
+    <button class="avatar-btn" id="avatar-btn">?</button>
+    <div class="dropdown" id="avatar-dropdown">
+      <div class="dropdown-user"><span id="dropdown-user-text">Not signed in</span> <span class="staff-star" id="user-star" style="display:none;">★</span></div>
+      <button class="link" id="signin-btn">Sign in</button>
+      <a href="/apply" id="apply-link">Apply to be an editor</a>
+      <button class="link" id="reset-password-btn" style="display:none;">Reset password</button>
+      <button class="link" id="sign-out-btn" style="display:none;">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <div id="sign-in-view" style="display:none; max-width: 420px; margin: 100px auto; text-align: center;">
+    <h1>Editor sign in</h1>
+    <p>Sign in with your editor account to continue — use the profile button in the top right.</p>
+    <button class="btn primary" id="sign-in-view-btn">Sign in</button>
+  </div>
+
+  <div id="not-staff-view" style="display:none; text-align:center; padding:80px 20px;">
+    <h1>Not authorized</h1>
+    <p>Your account isn't on the staff list, so you can't access the editor.</p>
+    <p><a href="/guides">Browse all guides</a></p>
+  </div>
+
+  <div id="list-view">
+    <div class="list-header">
+      <h1>Guides</h1>
+      <button class="btn primary" id="new-guide-btn">+ New page</button>
+    </div>
+    <div id="guides-list"></div>
+  </div>
+
+  <div id="editor-view">
+    <div class="doc-card" id="doc-card">
+      <div class="toast" id="toast">
+        <span id="toast-text">New page added</span>
+        <button class="undo" id="toast-undo">UNDO</button>
+      </div>
+
+      <div class="doc-title" id="doc-title" contenteditable="true" data-placeholder="Untitled guide"></div>
+      <div class="doc-byline" id="doc-byline">By — • —</div>
+
+      <div class="meta-row">
+        <div class="meta-field" style="flex:1;">
+          <div class="meta-label">Permalink</div>
+          <input type="text" class="permalink-input" id="permalink-input" placeholder="math/multivar/unit4" />
+          <div class="meta-sub">(Req.)</div>
+        </div>
+        <div class="meta-field">
+          <div class="meta-label">Guides</div>
+          <div class="tag-select-wrap" id="subject-wrap">
+            <div class="tag-pill-display" id="subject-pill"><span id="subject-pill-text">SELECT</span> <span class="x" id="subject-clear">×</span></div>
+            <div class="tag-dropdown" id="subject-dropdown">
+              <div data-value="math">Math</div>
+              <div data-value="science">Science</div>
+              <div data-value="social-studies">Social Studies</div>
+              <div data-value="english">English</div>
+            </div>
+          </div>
+          <div class="meta-sub">(Req.)</div>
+        </div>
+        <div class="meta-field">
+          <div class="meta-label">Class</div>
+          <div class="tag-select-wrap" id="class-wrap">
+            <div class="tag-pill-display" id="class-pill"><span id="class-pill-text">SELECT</span> <span class="x" id="class-clear">×</span></div>
+            <div class="tag-dropdown" id="class-dropdown">
+              <input type="text" id="class-custom-input" placeholder="Search classes…" />
+              <div id="class-options"></div>
+            </div>
+          </div>
+          <div class="meta-sub">(Req.)</div>
+        </div>
+      </div>
+
+      <div id="doc-body" contenteditable="true">
+        <p>Start writing your guide…</p>
+      </div>
+
+      <div class="field-row">
+        <label class="publish-toggle">
+          <input type="checkbox" id="guide-published" checked style="width:auto;" /> Published
+        </label>
+        <span class="save-status" id="save-status"></span>
+      </div>
+
+      <div class="field-row">
+        <button class="btn primary" id="save-guide-btn">Save</button>
+        <button class="btn" id="back-to-list-btn">Back to guides</button>
+        <button class="btn danger" id="delete-guide-btn" style="display:none;">Delete</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<div class="bottom-toolbar" id="bottom-toolbar" style="display:none;">
+  <button class="icon-btn" data-cmd="bold" title="Bold"><b>B</b></button>
+  <button class="icon-btn" data-cmd="italic" title="Italic"><i>I</i></button>
+  <button class="icon-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+  <button class="icon-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+  <div class="sep"></div>
+  <button class="icon-btn" data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+  <button class="icon-btn" data-cmd="insertOrderedList" title="Numbered list">1≡</button>
+  <div class="sep"></div>
+  <select id="block-type-select" title="Text style">
+    <option value="p">Body Text</option>
+    <option value="h1">Heading 1</option>
+    <option value="h2">Heading 2</option>
+    <option value="h3">Heading 3</option>
+    <option value="h4">Heading 4</option>
+    <option value="small">Small Text</option>
+  </select>
+  <select id="font-family-select" title="Font">
+    <option value="-apple-system">System</option>
+    <option value="Arial">Arial</option>
+    <option value="Georgia">Georgia</option>
+    <option value="'Courier New'">Courier</option>
+  </select>
+  <select id="font-size-select" title="Font size">
+    <option value="10">10</option>
+    <option value="12">12</option>
+    <option value="13">13</option>
+    <option value="14" selected>14</option>
+    <option value="16">16</option>
+    <option value="18">18</option>
+    <option value="20">20</option>
+    <option value="24">24</option>
+  </select>
+  <div class="sep"></div>
+  <button class="latex-btn" id="latex-btn">LaTeX √x</button>
+  <button class="media-btn" id="graph-btn">Graph</button>
+  <button class="media-btn" id="sketch-btn">Sketch</button>
+  <button class="media-btn" id="image-btn">Image</button>
+  <button class="media-btn" id="link-btn">Link</button>
+  <input type="file" id="image-file-input" accept="image/png,image/jpeg,image/svg+xml" style="display:none;" />
+</div>
+
+<script>
+const API_BASE = "https://cornerstone-guides-backend.vercel.app";
+let clerk;
+let editingId = null;
+let guidesCache = [];
+let subjectValue = "";
+let classValue = "";
+let permalinkManuallyEdited = false;
+let isDirty = false;
+let loadingGuide = false;
+
+function markDirty() {
+  if (loadingGuide) return;
+  isDirty = true;
+  const status = document.getElementById("save-status");
+  if (status && status.dataset.state !== "saving") {
+    status.textContent = "Unsaved changes";
+    status.dataset.state = "dirty";
+  }
+}
+
+function clearDirty() {
+  isDirty = false;
+}
+
+function confirmDiscard() {
+  return !isDirty || confirm("You have unsaved changes. Leave without saving?");
+}
+
+window.addEventListener("beforeunload", (e) => {
+  if (isDirty) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+// Shared Clerk session handling for the header (avatar + dropdown), matching
+// every other page on the site — so sign in/out and the profile UI behave
+// and sit in the same place everywhere.
+async function initClerk() {
+  clerk = window.Clerk;
+  await clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+  window.clerk = clerk;
+
+  async function refresh() {
+    const user = clerk.user;
+    const dropdownUserText = document.getElementById("dropdown-user-text");
+    const star = document.getElementById("user-star");
+    const signInBtn = document.getElementById("signin-btn");
+    const signOutBtn = document.getElementById("sign-out-btn");
+    const resetPasswordBtn = document.getElementById("reset-password-btn");
+    const applyLink = document.getElementById("apply-link");
+    const avatarBtn = document.getElementById("avatar-btn");
+
+    if (user) {
+      const username = user.username || (user.primaryEmailAddress?.emailAddress || "").split("@")[0] || "there";
+      avatarBtn.textContent = initials(user.fullName || username);
+      dropdownUserText.textContent = `Signed in as ${username}`;
+      signInBtn.style.display = "none";
+      signOutBtn.style.display = "block";
+      resetPasswordBtn.style.display = "block";
+      showSignedIn(user);
+    } else {
+      avatarBtn.textContent = "?";
+      dropdownUserText.textContent = "Not signed in";
+      star.style.display = "none";
+      signOutBtn.style.display = "none";
+      resetPasswordBtn.style.display = "none";
+      signInBtn.style.display = "block";
+      applyLink.style.display = "block";
+      showSignedOut();
+    }
+  }
+
+  clerk.addListener(refresh);
+  await refresh();
+}
+
+let signedInInitialized = false;
+
+function initials(name) {
+  if (!name) return "?";
+  return name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+function showSignedOut() {
+  signedInInitialized = false;
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("editor-view").style.display = "none";
+  document.getElementById("bottom-toolbar").style.display = "none";
+  document.getElementById("not-staff-view").style.display = "none";
+  document.getElementById("sign-in-view").style.display = "block";
+}
+
+function showSignedIn(user) {
+  document.getElementById("sign-in-view").style.display = "none";
+  // Clerk's "refresh" listener fires on routine token refreshes (every
+  // ~60s), not just real sign-in/out — re-running the staff check each time
+  // and reacting to it (showNotStaff/showList) could yank someone out of an
+  // in-progress edit on a transient network hiccup or a stale response, with
+  // no save prompt. Gate once per session; the backend still enforces staff
+  // membership on every actual save, so this is UX-only, not a security
+  // boundary, and there's nothing lost by not re-checking it live.
+  if (signedInInitialized) return;
+  gateOnStaffStatus(user.username);
+}
+
+async function gateOnStaffStatus(username) {
+  const star = document.getElementById("user-star");
+  const applyLink = document.getElementById("apply-link");
+  if (!username) {
+    star.style.display = "none";
+    showNotStaff();
+    return;
+  }
+  try {
+    const token = await getToken();
+    const res = await fetch(`${API_BASE}/api/staff`, { headers: { Authorization: `Bearer ${token}` } });
+    const staff = await res.json();
+    const isStaff = Array.isArray(staff) && staff.includes(username.toLowerCase());
+    star.style.display = isStaff ? "inline" : "none";
+    applyLink.style.display = isStaff ? "none" : "block";
+    if (!isStaff) {
+      showNotStaff();
+      return;
+    }
+    if (!signedInInitialized) {
+      signedInInitialized = true;
+      showList();
+    }
+  } catch (err) {
+    star.style.display = "none";
+    showNotStaff();
+  }
+}
+
+function showNotStaff() {
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("editor-view").style.display = "none";
+  document.getElementById("bottom-toolbar").style.display = "none";
+  document.getElementById("not-staff-view").style.display = "block";
+}
+
+async function getToken() {
+  return await clerk.session.getToken();
+}
+
+document.getElementById("avatar-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.toggle("open");
+});
+document.addEventListener("click", (e) => {
+  const dd = document.getElementById("avatar-dropdown");
+  if (dd && !dd.contains(e.target) && e.target.id !== "avatar-btn") dd.classList.remove("open");
+});
+document.getElementById("signin-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.remove("open");
+  window.clerk.openSignIn();
+});
+document.getElementById("reset-password-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.remove("open");
+  window.clerk.openUserProfile();
+});
+document.getElementById("sign-in-view-btn").addEventListener("click", () => {
+  window.clerk.openSignIn();
+});
+document.getElementById("sign-out-btn").addEventListener("click", async () => {
+  await window.clerk.signOut();
+  location.reload();
+});
+document.getElementById("nav-guides-link").addEventListener("click", (e) => {
+  e.preventDefault();
+  if (!signedInInitialized) return;
+  if (!confirmDiscard()) return;
+  clearDirty();
+  showList();
+});
+
+function showList() {
+  document.getElementById("editor-view").style.display = "none";
+  document.getElementById("bottom-toolbar").style.display = "none";
+  document.getElementById("list-view").style.display = "block";
+  loadGuides();
+}
+
+function showEditor() {
+  document.getElementById("list-view").style.display = "none";
+  document.getElementById("editor-view").style.display = "block";
+  document.getElementById("bottom-toolbar").style.display = "flex";
+}
+
+async function loadGuides() {
+  const list = document.getElementById("guides-list");
+  list.innerHTML = `<div class="guide-card-row"><span>Loading…</span></div>`;
+  try {
+    const token = await getToken();
+    const res = await fetch(`${API_BASE}/api/editor/guides`, { headers: { Authorization: `Bearer ${token}` } });
+    guidesCache = await res.json();
+    if (!guidesCache.length) {
+      list.innerHTML = `<div class="guide-card-row"><span>No guides yet — create your first page.</span></div>`;
+      return;
+    }
+    list.innerHTML = guidesCache.map(g => `
+      <div class="guide-card-row">
+        <div>
+          <div class="title">${g.title}</div>
+          <div class="meta">
+            ${g.subject ? `<span class="tag-mini">${g.subject}</span>` : ""}
+            ${g.section ? `<span class="tag-mini">${g.section}</span>` : ""}
+            ${g.published ? "Published" : "Draft"} · Updated ${new Date(g.updated_at).toLocaleDateString()}
+          </div>
+        </div>
+        <div class="actions">
+          <button class="btn edit-row-btn" data-id="${g.id}">Edit</button>
+          <button class="btn danger delete-row-btn" data-id="${g.id}">Delete</button>
+        </div>
+      </div>
+    `).join("");
+    list.querySelectorAll(".edit-row-btn").forEach(btn => {
+      btn.addEventListener("click", () => openGuide(guidesCache.find(g => g.id == btn.dataset.id)));
+    });
+    list.querySelectorAll(".delete-row-btn").forEach(btn => {
+      btn.addEventListener("click", async () => {
+        if (!confirm("Delete this guide?")) return;
+        const token = await getToken();
+        await fetch(`${API_BASE}/api/editor/guides/${btn.dataset.id}`, {
+          method: "DELETE", headers: { Authorization: `Bearer ${token}` }
+        });
+        loadGuides();
+      });
+    });
+  } catch (err) {
+    list.innerHTML = `<div class="guide-card-row"><span>Failed to load guides.</span></div>`;
+  }
+}
+
+document.getElementById("new-guide-btn").addEventListener("click", () => {
+  openGuide(null, { showToast: true });
+});
+document.getElementById("back-to-list-btn").addEventListener("click", () => {
+  if (!confirmDiscard()) return;
+  clearDirty();
+  showList();
+});
+
+function setSubject(val) {
+  subjectValue = val;
+  document.getElementById("subject-pill-text").textContent = val ? val.toUpperCase() : "SELECT";
+  document.getElementById("subject-dropdown").classList.remove("open");
+  updatePermalinkFromTags();
+  markDirty();
+}
+function setClass(val) {
+  classValue = val;
+  document.getElementById("class-pill-text").textContent = val ? val.toUpperCase() : "SELECT";
+  document.getElementById("class-dropdown").classList.remove("open");
+  updatePermalinkFromTags();
+  markDirty();
+}
+
+let allEditorClasses = [];
+async function loadEditorClasses() {
+  try {
+    const res = await fetch(`${API_BASE}/api/classes`);
+    allEditorClasses = await res.json();
+    renderClassOptions(allEditorClasses);
+  } catch (err) {
+    // Class picker just stays empty if this fails — not fatal to editing.
+  }
+}
+function renderClassOptions(list) {
+  const container = document.getElementById("class-options");
+  if (!list.length) {
+    container.innerHTML = `<div style="opacity:0.6; cursor:default;">No matching classes</div>`;
+    return;
+  }
+  container.innerHTML = list.map(c => `<div data-value="${c.name}">${c.name}</div>`).join("");
+}
+loadEditorClasses();
+
+document.getElementById("subject-pill").addEventListener("click", (e) => {
+  if (e.target.id === "subject-clear") { setSubject(""); return; }
+  document.getElementById("subject-dropdown").classList.toggle("open");
+});
+document.getElementById("subject-dropdown").addEventListener("click", (e) => {
+  if (e.target.dataset.value) setSubject(e.target.dataset.value);
+});
+document.getElementById("class-pill").addEventListener("click", (e) => {
+  if (e.target.id === "class-clear") { setClass(""); return; }
+  document.getElementById("class-dropdown").classList.toggle("open");
+  if (document.getElementById("class-dropdown").classList.contains("open")) {
+    document.getElementById("class-custom-input").focus();
+  }
+});
+document.getElementById("class-dropdown").addEventListener("click", (e) => {
+  if (e.target.dataset.value) setClass(e.target.dataset.value);
+});
+document.getElementById("class-custom-input").addEventListener("input", (e) => {
+  const q = e.target.value.trim().toLowerCase();
+  const filtered = !q ? allEditorClasses : allEditorClasses.filter(c => c.name.toLowerCase().includes(q));
+  renderClassOptions(filtered);
+});
+document.addEventListener("click", (e) => {
+  ["subject-wrap", "class-wrap"].forEach(id => {
+    const wrap = document.getElementById(id);
+    if (wrap && !wrap.contains(e.target)) {
+      wrap.querySelector(".tag-dropdown").classList.remove("open");
+    }
+  });
+});
+
+function updatePermalinkFromTags() {
+  if (permalinkManuallyEdited) return;
+  const parts = [subjectValue, classValue].filter(Boolean);
+  document.getElementById("permalink-input").value = parts.join("/");
+}
+document.getElementById("permalink-input").addEventListener("input", () => {
+  permalinkManuallyEdited = true;
+  markDirty();
+});
+document.getElementById("doc-title").addEventListener("input", markDirty);
+document.getElementById("doc-body").addEventListener("input", markDirty);
+document.getElementById("guide-published").addEventListener("change", markDirty);
+
+function openGuide(guide, opts) {
+  opts = opts || {};
+  loadingGuide = true;
+  editingId = guide ? guide.id : null;
+  permalinkManuallyEdited = false;
+
+  document.getElementById("doc-title").textContent = guide ? guide.title : "";
+  const author = (guide && guide.author_username) ? guide.author_username : (clerk.user ? (clerk.user.username || clerk.user.fullName) : "you");
+  const date = guide ? new Date(guide.updated_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" }) : new Date().toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+  document.getElementById("doc-byline").textContent = `By ${author} • ${date}`;
+
+  setSubject(guide ? (guide.subject || "") : "");
+  setClass(guide ? (guide.section || "") : "");
+  permalinkManuallyEdited = !!(guide && guide.slug);
+  document.getElementById("permalink-input").value = guide ? guide.slug : [subjectValue, classValue].filter(Boolean).join("/");
+
+  document.getElementById("doc-body").innerHTML = guide && guide.body ? guide.body : "<p>Start writing your guide…</p>";
+  document.getElementById("guide-published").checked = guide ? guide.published : true;
+  document.getElementById("delete-guide-btn").style.display = guide ? "inline-block" : "none";
+  const status = document.getElementById("save-status");
+  status.textContent = "";
+  delete status.dataset.state;
+
+  showEditor();
+  initGraphBlocks();
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([document.getElementById("doc-body")]);
+
+  loadingGuide = false;
+  clearDirty();
+
+  if (opts.showToast) showToast("New page added", () => discardNewGuide());
+}
+
+document.getElementById("delete-guide-btn").addEventListener("click", async () => {
+  if (!editingId) return;
+  if (!confirm("Delete this guide?")) return;
+  const token = await getToken();
+  await fetch(`${API_BASE}/api/editor/guides/${editingId}`, { method: "DELETE", headers: { Authorization: `Bearer ${token}` } });
+  showList();
+});
+
+function discardNewGuide() {
+  showList();
+}
+
+function showToast(text, undoFn) {
+  const toast = document.getElementById("toast");
+  document.getElementById("toast-text").textContent = text;
+  toast.classList.add("show");
+  const undoBtn = document.getElementById("toast-undo");
+  undoBtn.onclick = () => { toast.classList.remove("show"); if (undoFn) undoFn(); };
+  setTimeout(() => toast.classList.remove("show"), 4000);
+}
+
+// Captures state that doesn't naturally survive being serialized as static
+// HTML: caption text (lives only in the input's .value property, not the
+// HTML), the Desmos expressions for each graph (the mount div is otherwise
+// saved empty), and a snapshot image of each sketch canvas (canvas pixel
+// data is never part of innerHTML). Called right before we read
+// doc-body.innerHTML to build the save payload.
+function prepareBlocksForSave() {
+  const body = document.getElementById("doc-body");
+  body.querySelectorAll(".caption-input").forEach((input) => {
+    input.setAttribute("value", input.value || "");
+  });
+  body.querySelectorAll(".desmos-mount").forEach((mount) => {
+    if (mount._calc) {
+      try {
+        mount.setAttribute("data-expressions", JSON.stringify(mount._calc.getExpressions()));
+      } catch (err) { /* ignore */ }
+    }
+  });
+  body.querySelectorAll(".sketch-canvas").forEach((canvas) => {
+    const wrap = canvas.closest(".sketch-block-wrap");
+    if (wrap) {
+      try {
+        wrap.setAttribute("data-snapshot", canvas.toDataURL("image/png"));
+      } catch (err) { /* ignore, e.g. tainted canvas */ }
+    }
+  });
+}
+
+document.getElementById("save-guide-btn").addEventListener("click", async () => {
+  const status = document.getElementById("save-status");
+  const saveBtn = document.getElementById("save-guide-btn");
+  status.textContent = "Saving…";
+  status.dataset.state = "saving";
+  saveBtn.disabled = true;
+  prepareBlocksForSave();
+  const payload = {
+    title: document.getElementById("doc-title").textContent.trim() || "Untitled guide",
+    subject: subjectValue || null,
+    section: classValue || null,
+    slug: document.getElementById("permalink-input").value.trim() || null,
+    body: document.getElementById("doc-body").innerHTML,
+    published: document.getElementById("guide-published").checked
+  };
+  try {
+    const token = await getToken();
+    const url = editingId ? `${API_BASE}/api/editor/guides/${editingId}` : `${API_BASE}/api/editor/guides`;
+    const method = editingId ? "PUT" : "POST";
+    const res = await fetch(url, {
+      method, headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) {
+      if (res.status === 413) {
+        throw new Error("This page is too large to save — try a smaller image or fewer embedded images.");
+      }
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || "save failed");
+    }
+    const saved = await res.json();
+    editingId = saved.id;
+    clearDirty();
+    status.textContent = "Saved.";
+    status.dataset.state = "saved";
+    showToast(editingId ? "Page saved" : "New page added", null);
+  } catch (err) {
+    status.textContent = err.message || "Something went wrong.";
+    status.dataset.state = "error";
+  } finally {
+    saveBtn.disabled = false;
+  }
+});
+
+document.querySelectorAll(".bottom-toolbar button[data-cmd]").forEach(btn => {
+  btn.addEventListener("click", () => {
+    document.getElementById("doc-body").focus();
+    document.execCommand(btn.dataset.cmd, false, null);
+  });
+});
+
+document.getElementById("block-type-select").addEventListener("change", (e) => {
+  document.getElementById("doc-body").focus();
+  const val = e.target.value;
+  const tag = val === "small" ? "p" : val;
+  document.execCommand("formatBlock", false, tag);
+  if (val === "small") {
+    document.execCommand("fontSize", false, "2");
+  }
+});
+document.getElementById("font-family-select").addEventListener("change", (e) => {
+  document.getElementById("doc-body").focus();
+  document.execCommand("fontName", false, e.target.value);
+});
+document.getElementById("font-size-select").addEventListener("change", (e) => {
+  const body = document.getElementById("doc-body");
+  body.focus();
+  const px = e.target.value;
+  // execCommand("fontSize") only understands the legacy HTML sizes 1-7, which
+  // map to browser keyword sizes (xx-small..xx-large) — NOT the px values
+  // shown in the dropdown, which is why e.g. 12 -> 14 used to feel like a much
+  // bigger jump than one point size. Use "7" as a throwaway sentinel value,
+  // then swap the <font size="7"> it produces for a span with the exact px
+  // size the user picked.
+  document.execCommand("fontSize", false, "7");
+  body.querySelectorAll('font[size="7"]').forEach((el) => {
+    const span = document.createElement("span");
+    span.style.fontSize = `${px}px`;
+    span.innerHTML = el.innerHTML;
+    el.replaceWith(span);
+  });
+});
+
+document.getElementById("latex-btn").addEventListener("click", () => {
+  const expr = prompt("Enter LaTeX (without $ signs):", "f(x)");
+  if (!expr) return;
+  const body = document.getElementById("doc-body");
+  body.focus();
+  document.execCommand("insertHTML", false, `<span class="latex-inline">$${expr}$</span>&nbsp;`);
+  if (window.MathJax && window.MathJax.typesetPromise) window.MathJax.typesetPromise([body]);
+});
+
+document.getElementById("image-btn").addEventListener("click", () => {
+  document.getElementById("image-file-input").click();
+});
+const MAX_IMAGE_BYTES = 2.5 * 1024 * 1024; // base64 inflates ~33%, keep well under the 4mb save limit, esp. with multiple images
+
+document.getElementById("image-file-input").addEventListener("change", (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  if (file.size > MAX_IMAGE_BYTES) {
+    alert(`That image is too big (${(file.size / 1024 / 1024).toFixed(1)}MB). Please use one under ${(MAX_IMAGE_BYTES / 1024 / 1024).toFixed(1)}MB so the page can still save.`);
+    e.target.value = "";
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = () => {
+    const body = document.getElementById("doc-body");
+    body.focus();
+    document.execCommand("insertHTML", false, `<img class="embedded-image" src="${reader.result}" alt="${file.name}" /><p><br></p>`);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+});
+
+document.getElementById("link-btn").addEventListener("click", () => {
+  const url = prompt("Link URL:", "https://");
+  if (!url) return;
+  document.getElementById("doc-body").focus();
+  document.execCommand("createLink", false, url);
+});
+
+let graphCounter = 0;
+
+document.getElementById("graph-btn").addEventListener("click", () => {
+  graphCounter += 1;
+  const id = `graph-${Date.now()}-${graphCounter}`;
+  const html = `
+    <div class="graph-block-wrap" contenteditable="false">
+      <div class="block-card">
+        <div class="desmos-mount" id="${id}"></div>
+      </div>
+      <div class="block-footer">
+        <span class="block-tag">GRAPH</span>
+        <button class="edit-toggle" data-target="${id}">EDIT</button>
+        <input class="caption-input" placeholder="Caption: describe this graph" />
+        <button class="block-remove">Remove</button>
+      </div>
+    </div>
+    <p><br></p>
+  `;
+  const body = document.getElementById("doc-body");
+  body.focus();
+  document.execCommand("insertHTML", false, html);
+  requestAnimationFrame(() => mountDesmos(id));
+});
+
+function mountDesmos(mountId, expressions) {
+  const el = document.getElementById(mountId);
+  if (!el) return;
+  if (!window.Desmos) {
+    el.innerHTML = '<div class="desmos-error">Graphing tool failed to load. Check your connection and reopen this guide.</div>';
+    return;
+  }
+  const calc = window.Desmos.GraphingCalculator(el, { expressions: true, settingsMenu: false, lockViewport: false });
+  const exprs = (expressions && expressions.length) ? expressions : [{ id: "graph1", latex: "f(x)=x^2" }];
+  exprs.forEach((expr) => calc.setExpression(expr));
+  el._calc = calc;
+  setGraphLocked(mountId, true);
+}
+
+function setGraphLocked(mountId, locked) {
+  const el = document.getElementById(mountId);
+  if (!el || !el._calc) return;
+  el._calc.updateSettings({ expressionsCollapsed: locked, expressions: !locked, lockViewport: locked });
+}
+
+function initGraphBlocks() {
+  document.querySelectorAll(".desmos-mount").forEach(el => {
+    if (el._calc) return;
+    let expressions = null;
+    if (el.dataset.expressions) {
+      try { expressions = JSON.parse(el.dataset.expressions); } catch (err) { expressions = null; }
+    }
+    mountDesmos(el.id, expressions);
+  });
+}
+
+document.getElementById("doc-body").addEventListener("click", (e) => {
+  if (e.target.classList.contains("edit-toggle")) {
+    const targetId = e.target.dataset.target;
+    const el = document.getElementById(targetId);
+    const isLocked = el && el._calc && el._calc.settings.lockViewport;
+    setGraphLocked(targetId, !isLocked);
+    e.target.textContent = isLocked ? "DONE" : "EDIT";
+  }
+  if (e.target.classList.contains("block-remove")) {
+    const wrap = e.target.closest(".graph-block-wrap, .sketch-block-wrap");
+    if (wrap) wrap.remove();
+  }
+});
+
+let sketchCounter = 0;
+
+document.getElementById("sketch-btn").addEventListener("click", () => {
+  sketchCounter += 1;
+  const id = `sketch-${Date.now()}-${sketchCounter}`;
+  const html = `
+    <div class="sketch-block-wrap" contenteditable="false">
+      <div class="block-card">
+        <div class="sketch-tools" data-target="${id}">
+          <button class="tool active" data-tool="pen" title="Freehand pen">Pen</button>
+          <button class="tool" data-tool="line" title="Straight line">Line</button>
+          <button class="tool" data-tool="rect" title="Rectangle">Rect</button>
+          <button class="tool" data-tool="circle" title="Circle">Circle</button>
+          <button class="tool" data-tool="eraser" title="Eraser">Erase</button>
+          <span class="sketch-sep"></span>
+          <input type="color" class="sketch-color" value="#1f2328" title="Color" />
+          <input type="range" class="sketch-width" min="1" max="20" value="2" title="Stroke width" />
+          <span class="sketch-width-label">2px</span>
+          <span class="sketch-sep"></span>
+          <button class="sketch-clear" data-target="${id}">Clear</button>
+        </div>
+        <canvas class="sketch-canvas" id="${id}" width="800" height="400"></canvas>
+      </div>
+      <div class="block-footer">
+        <span class="block-tag">SKETCH</span>
+        <input class="caption-input" placeholder="Caption: describe this sketch" />
+        <button class="block-remove">Remove</button>
+      </div>
+    </div>
+    <p><br></p>
+  `;
+  const body = document.getElementById("doc-body");
+  body.focus();
+  document.execCommand("insertHTML", false, html);
+  requestAnimationFrame(() => initSketchCanvas(id));
+});
+
+function initSketchCanvas(canvasId) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext("2d");
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+
+  const wrap = canvas.closest(".sketch-block-wrap");
+  const toolbar = wrap ? wrap.querySelector(".sketch-tools") : null;
+
+  const state = { tool: "pen", color: "#1f2328", width: 2, drawing: false, startPos: null, snapshot: null };
+
+  if (wrap && wrap.dataset.snapshot) {
+    const img = new Image();
+    img.onload = () => ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+    img.src = wrap.dataset.snapshot;
+  }
+
+  function pos(e) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+    return { x: (clientX - rect.left) * scaleX, y: (clientY - rect.top) * scaleY };
+  }
+
+  function applyStrokeStyle() {
+    ctx.lineWidth = state.width;
+    ctx.strokeStyle = state.color;
+    ctx.globalCompositeOperation = state.tool === "eraser" ? "destination-out" : "source-over";
+  }
+
+  function drawShapePreview(p) {
+    ctx.putImageData(state.snapshot, 0, 0);
+    applyStrokeStyle();
+    ctx.beginPath();
+    if (state.tool === "rect") {
+      ctx.strokeRect(state.startPos.x, state.startPos.y, p.x - state.startPos.x, p.y - state.startPos.y);
+    } else if (state.tool === "circle") {
+      const rx = Math.abs(p.x - state.startPos.x) / 2;
+      const ry = Math.abs(p.y - state.startPos.y) / 2;
+      const cx = (state.startPos.x + p.x) / 2;
+      const cy = (state.startPos.y + p.y) / 2;
+      ctx.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+      ctx.stroke();
+    } else if (state.tool === "line") {
+      ctx.moveTo(state.startPos.x, state.startPos.y);
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    }
+  }
+
+  function start(e) {
+    state.drawing = true;
+    const p = pos(e);
+    state.startPos = p;
+    applyStrokeStyle();
+    if (state.tool === "pen" || state.tool === "eraser") {
+      ctx.beginPath();
+      ctx.moveTo(p.x, p.y);
+    } else {
+      state.snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    }
+    e.preventDefault();
+  }
+
+  function move(e) {
+    if (!state.drawing) return;
+    const p = pos(e);
+    if (state.tool === "pen" || state.tool === "eraser") {
+      ctx.lineTo(p.x, p.y);
+      ctx.stroke();
+    } else {
+      drawShapePreview(p);
+    }
+    e.preventDefault();
+  }
+
+  function end(e) {
+    if (!state.drawing) return;
+    if (state.tool === "line" || state.tool === "rect" || state.tool === "circle") {
+      const p = e && (e.changedTouches || e.clientX !== undefined) ? pos(e) : state.startPos;
+      drawShapePreview(p);
+    }
+    state.drawing = false;
+    state.snapshot = null;
+    ctx.globalCompositeOperation = "source-over";
+    markDirty();
+  }
+
+  canvas.addEventListener("mousedown", start);
+  canvas.addEventListener("mousemove", move);
+  window.addEventListener("mouseup", end);
+  canvas.addEventListener("touchstart", start);
+  canvas.addEventListener("touchmove", move);
+  canvas.addEventListener("touchend", end);
+
+  if (toolbar) {
+    toolbar.querySelectorAll(".tool").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        toolbar.querySelectorAll(".tool").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
+        state.tool = btn.dataset.tool;
+        canvas.style.cursor = state.tool === "eraser" ? "cell" : "crosshair";
+      });
+    });
+    const colorInput = toolbar.querySelector(".sketch-color");
+    colorInput.addEventListener("input", () => { state.color = colorInput.value; });
+    const widthInput = toolbar.querySelector(".sketch-width");
+    const widthLabel = toolbar.querySelector(".sketch-width-label");
+    widthInput.addEventListener("input", () => {
+      state.width = Number(widthInput.value);
+      widthLabel.textContent = `${widthInput.value}px`;
+    });
+  }
+}
+
+document.getElementById("doc-body").addEventListener("click", (e) => {
+  if (e.target.classList.contains("sketch-clear")) {
+    const canvas = document.getElementById(e.target.dataset.target);
+    if (canvas) {
+      canvas.getContext("2d").clearRect(0, 0, canvas.width, canvas.height);
+      const wrap = canvas.closest(".sketch-block-wrap");
+      if (wrap) wrap.removeAttribute("data-snapshot");
+      markDirty();
+    }
+  }
+});
+
+window.addEventListener("load", initClerk);
+</script>
+
+</body>
+</html>

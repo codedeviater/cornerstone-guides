@@ -1,0 +1,19 @@
+backend:
+  name: git-gateway
+  site_domain: cornerstoneguides.org
+  repo: codedeviater/cornerstone-guides
+  branch: main
+
+media_folder: "assets/images"
+public_folder: "/assets/images"
+
+collections:
+  - name: "guides"
+    label: "Study Guides"
+    folder: "_guides"
+    create: true
+    slug: "{{slug}}"
+    fields:
+      - {label: "Title", name: "title", widget: "string"}
+      - {label: "Subject", name: "subject", widget: "select", options: ["AP Chemistry", "AP US History", "General"]}
+      - {label: "Body", name: "body", widget: "markdown"}

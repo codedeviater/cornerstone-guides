@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>{% if page.title %}{{ page.title }} · {% endif %}Cornerstone Guides</title>
+<script
+  async
+  crossorigin="anonymous"
+  src="https://clerk.cornerstoneguides.org/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsuY29ybmVyc3RvbmVndWlkZXMub3JnJA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<style>
+  :root {
+    --ink: #1f2c38;
+    --muted: #6b7684;
+    --line: #e6e8eb;
+    --bg: #f7f8fa;
+    --card: #ffffff;
+    --accent: #2c3e50;
+    --accent-hover: #1f2c38;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+  }
+  a { color: inherit; }
+
+  header.nav {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding: 14px 28px;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 17px; text-decoration: none; }
+  .brand .dot { width: 10px; height: 10px; border-radius: 3px; background: var(--accent); display: inline-block; }
+  nav.links { display: flex; gap: 18px; font-size: 14px; font-weight: 600; color: var(--muted); }
+  nav.links a { text-decoration: none; }
+  nav.links a:hover, nav.links a.active { color: var(--ink); }
+  .search-wrap { flex: 1; display: flex; justify-content: center; }
+  .search-wrap input {
+    width: 100%;
+    max-width: 380px;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid var(--line);
+    background: var(--bg);
+    font-size: 13px;
+  }
+  .avatar-wrap { position: relative; }
+  .avatar-btn {
+    width: 34px; height: 34px; border-radius: 50%;
+    background: var(--accent); color: #fff; border: none;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .dropdown {
+    position: absolute; right: 0; top: 42px;
+    background: var(--card); border: 1px solid var(--line);
+    border-radius: 10px; box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    min-width: 260px; display: none; overflow: hidden;
+    font-size: 14px;
+  }
+  .dropdown.open { display: block; }
+  .dropdown-user { padding: 10px 14px; font-size: 12px; color: var(--muted); border-bottom: 1px solid var(--line); }
+  .staff-star { color: #d4a017; }
+  .dropdown a, .dropdown button.link {
+    display: block; width: 100%; text-align: left;
+    padding: 10px 14px; background: none; border: none; cursor: pointer; font-size: 14px; text-decoration: none;
+  }
+  .dropdown a:hover, .dropdown button.link:hover { background: var(--bg); }
+
+  .modal-backdrop {
+    display: none; position: fixed; inset: 0; background: rgba(20,24,29,0.45);
+    z-index: 50; align-items: center; justify-content: center;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    background: var(--card); border-radius: 14px; width: 92%; max-width: 420px;
+    max-height: 80vh; display: flex; flex-direction: column; padding: 20px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; }
+  .modal-head h3 { margin: 0; font-size: 16px; }
+  .modal-close { background: none; border: none; font-size: 20px; cursor: pointer; color: var(--muted); line-height: 1; }
+  .modal-sub { font-size: 12px; color: var(--muted); margin: 6px 0 14px; }
+  .modal-list { overflow-y: auto; font-size: 13px; }
+  .modal-class-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--line); }
+  .modal-class-row:last-child { border-bottom: none; }
+  .modal-class-sub { font-size: 11px; color: var(--muted); }
+  .mc-switch { position: relative; width: 36px; height: 20px; flex-shrink: 0; }
+  .mc-switch input { opacity: 0; width: 0; height: 0; }
+  .mc-slider { position: absolute; cursor: pointer; inset: 0; background: var(--line); border-radius: 999px; transition: 0.15s; }
+  .mc-slider::before { content: ""; position: absolute; height: 16px; width: 16px; left: 2px; top: 2px; background: #fff; border-radius: 50%; transition: 0.15s; }
+  .mc-switch input:checked + .mc-slider { background: var(--accent); }
+  .mc-switch input:checked + .mc-slider::before { transform: translateX(16px); }
+
+  main.site-main { max-width: 1440px; width: 100%; margin: 0 auto; padding: 32px 40px 100px; box-sizing: border-box; }
+
+  .bottom-bar {
+    position: fixed; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: space-between; align-items: end;
+    padding: 0 20px; pointer-events: none; z-index: 30;
+  }
+  .bottom-left {
+    display: flex; align-items: end; gap: 10px;
+  }
+  .bottom-bar .edit-fab { margin-bottom: 10px; }
+  .bottom-bar > * { pointer-events: auto; }
+  .discord-fab {
+    width: 46px; height: 46px; margin-bottom: 10px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: #5865f2; color: #fff; border: 1px solid rgba(0,0,0,0.06);
+    box-shadow: 0 6px 18px rgba(88,101,242,0.28);
+    text-decoration: none; transition: transform 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+  }
+  .discord-fab:hover {
+    background: #4752c4; transform: translateY(-2px);
+    box-shadow: 0 9px 22px rgba(88,101,242,0.34);
+  }
+  .discord-fab svg {
+    width: 24px;
+    height: 24px;
+    fill: currentColor;
+    transform: translateY(5px);
+  }
+  .discord-fab .discord-label {
+    position: absolute; left: 58px; bottom: 15px; white-space: nowrap;
+    background: var(--ink); color: #fff; padding: 6px 9px; border-radius: 8px;
+    font-size: 12px; font-weight: 600; opacity: 0; transform: translateX(-4px);
+    pointer-events: none; transition: opacity 0.18s ease, transform 0.18s ease;
+    box-shadow: 0 5px 14px rgba(0,0,0,0.14);
+  }
+  .discord-fab:hover .discord-label { opacity: 1; transform: translateX(0); }
+  .feedback-tab {
+    background: var(--accent); color: #fff; font-size: 13px; font-weight: 600;
+    padding: 10px 16px; border-radius: 999px 999px 0 0; cursor: pointer; border: none;
+  }
+  .feedback-tab:hover { background: var(--accent-hover); }
+  .edit-fab {
+    width: 42px; height: 42px; border-radius: 50%; background: var(--card);
+    border: 1px solid var(--line); box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 16px;
+    text-decoration: none;
+  }
+</style>
+{% if page.extra_head %}{{ page.extra_head }}{% endif %}
+</head>
+<body>
+
+<header class="nav">
+  <a class="brand" href="/"><span class="dot"></span> Cornerstone</a>
+  <nav class="links">
+    <a href="/" {% if page.url == "/" %}class="active"{% endif %}>Home</a>
+    <a href="/archive" {% if page.url contains "/archive" %}class="active"{% endif %}>Archive</a>
+    <a href="/guides" {% if page.url contains "/guides" %}class="active"{% endif %}>Guides</a>
+    {% comment %} Games temporarily hidden — re-enable by uncommenting this link {% endcomment %}
+    {% comment %}<a href="/games.html" {% if page.url contains "/games" %}class="active"{% endif %}>Games</a>{% endcomment %}
+    <a href="/credits" {% if page.url contains "/credits" %}class="active"{% endif %}>Credits</a>
+  </nav>
+  <div class="search-wrap">
+    <input type="search" placeholder="Search guides…" id="search-input" />
+  </div>
+  <div class="avatar-wrap">
+    <button class="avatar-btn" id="avatar-btn">?</button>
+    <div class="dropdown" id="avatar-dropdown">
+      <div class="dropdown-user"><span id="dropdown-user-text">Not signed in</span> <span class="staff-star" id="dropdown-star" style="display:none;">★</span></div>
+      <button class="link" id="signin-btn">Sign in</button>
+      <a href="/apply" id="apply-link">Apply to be an editor</a>
+      <a href="/editor.html">Editor panel</a>
+      <button class="link" id="my-classes-btn" style="display:none;">My classes</button>
+      <button class="link" id="reset-password-btn" style="display:none;">Reset password</button>
+      <button class="link" id="signout-btn" style="display:none;">Sign out</button>
+    </div>
+  </div>
+</header>
+
+<div class="modal-backdrop" id="my-classes-backdrop">
+  <div class="modal" id="my-classes-modal">
+    <div class="modal-head">
+      <h3>My classes</h3>
+      <button class="modal-close" id="my-classes-close">×</button>
+    </div>
+    <div class="modal-sub">Toggle the classes you're in — we use this to recommend guides and archive uploads.</div>
+    <div id="my-classes-list" class="modal-list">Loading…</div>
+  </div>
+</div>
+
+<main class="site-main">
+  {{ content }}
+</main>
+
+<div class="bottom-bar">
+  <div class="bottom-left">
+    <a class="discord-fab" href="https://discord.gg/eYshVg8DCR" target="_blank" rel="noopener noreferrer" title="Join our Discord" aria-label="Join our Discord">
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M19.54 0.6A18.1 18.1 0 0 0 15.92 0l-.44.89a16.6 16.6 0 0 0-6.96 0L8.08 0A18.1 18.1 0 0 0 4.46.6C2.18 3.99 1.04 7.3.59 10.56A17.9 17.9 0 0 0 6.03 13.2c.45-.62.85-1.28 1.2-1.97-.66-.25-1.3-.57-1.9-.95.16-.12.32-.24.48-.36 3.67 1.72 7.65 1.72 11.28 0 .16.12.32.24.48.36-.6.38-1.24.7-1.9.95.35.69.75 1.35 1.2 1.97a17.9 17.9 0 0 0 5.44-2.64C21.96 7.3 20.82 3.99 19.54.6ZM8.28 8.98c-1.06 0-1.93-.98-1.93-2.18s.85-2.18 1.93-2.18 1.94.98 1.93 2.18c0 1.2-.85 2.18-1.93 2.18Zm7.44 0c-1.06 0-1.93-.98-1.93-2.18s.85-2.18 1.93-2.18 1.94.98 1.93 2.18c0 1.2-.85 2.18-1.93 2.18Z"/>
+      </svg>
+      <span class="discord-label">Join our Discord</span>
+    </a>
+    <button class="feedback-tab" id="feedback-btn">Feedback?</button>
+  </div>
+  <a class="edit-fab" href="/editor.html" title="Editor">✎</a>
+</div>
+
+<script>
+// Shared Clerk session handling for every page (nav avatar + dropdown).
+// Individual pages can listen for the "clerk-ready" event on window if
+// they need the token/user for their own API calls.
+window.clerkToken = null;
+window.clerkUser = null;
+
+function initials(name) {
+  if (!name) return "?";
+  return name.trim().split(/\s+/).map(p => p[0]).slice(0, 2).join("").toUpperCase();
+}
+
+async function initSharedClerk() {
+  const clerk = window.Clerk;
+  await clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+  window.clerk = clerk;
+
+  async function refresh() {
+    const user = clerk.user;
+    const dropdownUserText = document.getElementById("dropdown-user-text");
+    const dropdownStar = document.getElementById("dropdown-star");
+    const signInBtn = document.getElementById("signin-btn");
+    const signOutBtn = document.getElementById("signout-btn");
+    const resetPasswordBtn = document.getElementById("reset-password-btn");
+    const applyLink = document.getElementById("apply-link");
+    const avatarBtn = document.getElementById("avatar-btn");
+
+    if (user) {
+      window.clerkToken = await clerk.session.getToken();
+      window.clerkUser = user;
+      const username = user.username || (user.primaryEmailAddress?.emailAddress || "").split("@")[0] || "there";
+      avatarBtn.textContent = initials(user.fullName || username);
+      dropdownUserText.textContent = `Signed in as ${username}`;
+      signInBtn.style.display = "none";
+      signOutBtn.style.display = "block";
+      resetPasswordBtn.style.display = "block";
+      document.getElementById("my-classes-btn").style.display = "block";
+      checkStaffStatus(user.username, dropdownStar, applyLink);
+    } else {
+      window.clerkToken = null;
+      window.clerkUser = null;
+      avatarBtn.textContent = "?";
+      dropdownUserText.textContent = "Not signed in";
+      dropdownStar.style.display = "none";
+      signOutBtn.style.display = "none";
+      resetPasswordBtn.style.display = "none";
+      document.getElementById("my-classes-btn").style.display = "none";
+      signInBtn.style.display = "block";
+      applyLink.style.display = "block";
+    }
+    window.dispatchEvent(new CustomEvent("clerk-ready", { detail: { user: window.clerkUser, token: window.clerkToken } }));
+  }
+
+  // Also hides "Apply to be an editor" once someone is already staff —
+  // it doesn't make sense to keep offering to apply at that point.
+  async function checkStaffStatus(username, starEl, applyLinkEl) {
+    if (!username) { starEl.style.display = "none"; if (applyLinkEl) applyLinkEl.style.display = "block"; return; }
+    try {
+      const res = await fetch("https://cornerstone-guides-backend.vercel.app/api/staff", {
+        headers: { Authorization: `Bearer ${window.clerkToken}` }
+      });
+      const staff = await res.json();
+      const isStaff = staff.includes(username.toLowerCase());
+      starEl.style.display = isStaff ? "inline" : "none";
+      if (applyLinkEl) applyLinkEl.style.display = isStaff ? "none" : "block";
+    } catch (err) {
+      starEl.style.display = "none";
+    }
+  }
+
+  clerk.addListener(refresh);
+  await refresh();
+}
+
+document.getElementById("avatar-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.toggle("open");
+});
+document.getElementById("signout-btn").addEventListener("click", async () => {
+  await window.clerk.signOut();
+  location.reload();
+});
+document.getElementById("signin-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.remove("open");
+  window.clerk.openSignIn();
+});
+document.getElementById("reset-password-btn").addEventListener("click", () => {
+  document.getElementById("avatar-dropdown").classList.remove("open");
+  // Clerk's account/security screen is where users change their password.
+  window.clerk.openUserProfile();
+});
+document.getElementById("feedback-btn").addEventListener("click", () => {
+  window.location.href = "mailto:aarshtripathi@cornerstoneguides.org?subject=Cornerstone%20Guides%20Feedback";
+});
+
+// My classes modal — used sitewide (via the profile dropdown) so the same
+// selections drive both guide and archive recommendations everywhere.
+const API_BASE_SHARED = "https://cornerstone-guides-backend.vercel.app";
+document.getElementById("my-classes-btn").addEventListener("click", async () => {
+  document.getElementById("avatar-dropdown").classList.remove("open");
+  document.getElementById("my-classes-backdrop").classList.add("open");
+  const list = document.getElementById("my-classes-list");
+  list.innerHTML = "Loading…";
+  try {
+    const res = await fetch(`${API_BASE_SHARED}/api/student/classes`, {
+      headers: { Authorization: `Bearer ${window.clerkToken}` }
+    });
+    const classes = await res.json();
+    if (!classes.length) {
+      list.innerHTML = `<div class="modal-class-sub">No classes have been added yet.</div>`;
+      return;
+    }
+    list.innerHTML = classes.map(c => `
+      <div class="modal-class-row">
+        <span>${c.name}${c.subject ? `<div class="modal-class-sub">${c.subject}</div>` : ""}</span>
+        <label class="mc-switch">
+          <input type="checkbox" data-class-id="${c.id}" ${c.enabled ? "checked" : ""} />
+          <span class="mc-slider"></span>
+        </label>
+      </div>
+    `).join("");
+    list.querySelectorAll("input[type=checkbox]").forEach(input => {
+      input.addEventListener("change", async (e) => {
+        try {
+          await fetch(`${API_BASE_SHARED}/api/student/classes/${e.target.dataset.classId}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${window.clerkToken}` },
+            body: JSON.stringify({ enabled: e.target.checked })
+          });
+        } catch (err) {
+          console.error(err);
+        }
+      });
+    });
+  } catch (err) {
+    console.error(err);
+    list.innerHTML = `<div class="modal-class-sub">Couldn't load your classes.</div>`;
+  }
+});
+document.getElementById("my-classes-close").addEventListener("click", () => {
+  document.getElementById("my-classes-backdrop").classList.remove("open");
+});
+document.getElementById("my-classes-backdrop").addEventListener("click", (e) => {
+  if (e.target.id === "my-classes-backdrop") e.target.classList.remove("open");
+});
+
+document.getElementById("search-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && e.target.value.trim()) {
+    window.location.href = `/guides?q=${encodeURIComponent(e.target.value.trim())}`;
+  }
+});
+document.addEventListener("click", (e) => {
+  const dd = document.getElementById("avatar-dropdown");
+  if (dd && !dd.contains(e.target) && e.target.id !== "avatar-btn") dd.classList.remove("open");
+});
+
+window.addEventListener("load", initSharedClerk);
+</script>
+
+</body>
+</html>

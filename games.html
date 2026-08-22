@@ -1,0 +1,31 @@
+---
+layout: default
+title: "Games"
+permalink: /games.html
+---
+
+<style>
+  .game-list { list-style: none; padding: 0; margin-top: 12px; }
+  .game-list li { padding: 14px 0; border-bottom: 1px solid #e6e8eb; display: flex; justify-content: space-between; }
+  .empty { color: #6b7684; font-size: 14px; margin-top: 12px; }
+</style>
+
+<h1>Games</h1>
+<p>Study minigames tied to your classes. Play one and it'll show up on your homepage.</p>
+<ul class="game-list" id="game-list"></ul>
+<div class="empty" id="empty" style="display:none;">No games have been added yet — check back soon.</div>
+
+<script>
+const API_BASE = "https://cornerstone-guides-backend.vercel.app";
+fetch(`${API_BASE}/api/games`)
+  .then(r => r.json())
+  .then(games => {
+    const list = document.getElementById("game-list");
+    if (!games.length) {
+      document.getElementById("empty").style.display = "block";
+      return;
+    }
+    list.innerHTML = games.map(g => `<li><span>${g.title}</span><span style="color:#6b7684;">${g.subject || ""}</span></li>`).join("");
+  })
+  .catch(() => { document.getElementById("empty").style.display = "block"; });
+</script>

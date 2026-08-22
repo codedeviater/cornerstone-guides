@@ -1,0 +1,179 @@
+---
+layout: default
+title: "Guide"
+permalink: /404.html
+---
+
+<style>
+  .guide-view-card {
+    background: #fff; border: 1px solid #e6e8eb; border-radius: 16px;
+    padding: 40px 48px; box-shadow: 0 8px 24px rgba(0,0,0,0.05); margin-top: 8px;
+  }
+  .guide-view-card h1 { font-size: 28px; margin: 0 0 4px; }
+  .guide-view-byline { font-size: 12px; color: #6b7684; margin-bottom: 24px; }
+  .guide-view-body { font-size: 15px; line-height: 1.65; }
+  .guide-view-body img { max-width: 100%; border-radius: 10px; }
+  .guide-view-body .block-card { background: #fff; border: 1px solid #e1e4e8; border-radius: 12px; padding: 18px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); margin: 18px 0; }
+  .guide-view-body .desmos-mount { width: 100%; height: 280px; border-radius: 8px; overflow: hidden; }
+  .guide-view-body .desmos-error, .guide-view-body .block-unavailable {
+    width: 100%; min-height: 100px; border-radius: 8px; background: #f7f8fa;
+    border: 1px dashed #e6e8eb; display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 20px; font-size: 13px; color: #6b7684;
+  }
+  .guide-view-body .sketch-snapshot { width: 100%; display: block; border-radius: 8px; }
+  .guide-view-body .block-footer { display: flex; align-items: center; gap: 10px; margin: 8px 2px 20px; flex-wrap: wrap; }
+  .guide-view-body .block-tag { font-size: 10px; font-weight: 700; letter-spacing: 0.06em; color: #6b7684; text-transform: uppercase; }
+  .guide-view-body .block-caption { font-size: 12px; color: #6b7684; }
+  #not-found-view { display: none; text-align: center; padding: 60px 0; color: #6b7684; }
+  #not-found-view h1 { color: #1f2c38; font-size: 22px; }
+  #loading-view { text-align: center; padding: 60px 0; color: #6b7684; font-size: 14px; }
+</style>
+
+<div id="loading-view">Loading…</div>
+
+<div id="guide-view" style="display:none;">
+  <div class="guide-view-card">
+    <h1 id="gv-title"></h1>
+    <div class="guide-view-byline" id="gv-byline"></div>
+    <div class="guide-view-body" id="gv-body"></div>
+  </div>
+</div>
+
+<div id="not-found-view">
+  <h1>Page not found</h1>
+  <p>We couldn't find anything at this address.</p>
+  <p><a href="/guides">Browse all guides</a></p>
+</div>
+
+<script>
+(function () {
+  const API_BASE = "https://cornerstone-guides-backend.vercel.app";
+  const path = window.location.pathname.replace(/^\/+/, "").replace(/\/+$/, "");
+
+  function showNotFound() {
+    document.getElementById("loading-view").style.display = "none";
+    document.getElementById("not-found-view").style.display = "block";
+  }
+
+  // Strips the editor-only controls (edit/remove/clear buttons) that would
+  // otherwise be saved verbatim into guide.body, and turns each caption
+  // <input> back into static text (its typed value only survives as the
+  // `value` attribute, not as element content).
+  function sanitizeGuideBody(container) {
+    container.querySelectorAll(".edit-toggle, .block-remove, .sketch-clear, .sketch-tools").forEach((el) => el.remove());
+    container.querySelectorAll(".caption-input").forEach((input) => {
+      const text = input.getAttribute("value") || "";
+      if (!text) { input.remove(); return; }
+      const caption = document.createElement("div");
+      caption.className = "block-caption";
+      caption.textContent = text;
+      input.replaceWith(caption);
+    });
+    // A sketch canvas never keeps its drawn pixels once saved as HTML — a
+    // snapshot image is captured in the editor at save time and stored as
+    // data-snapshot; swap it back in as a plain image for readers.
+    container.querySelectorAll(".sketch-block-wrap").forEach((wrap) => {
+      const canvas = wrap.querySelector("canvas.sketch-canvas");
+      if (!canvas) return;
+      const snapshot = wrap.getAttribute("data-snapshot");
+      if (snapshot) {
+        const img = document.createElement("img");
+        img.className = "sketch-snapshot";
+        img.src = snapshot;
+        img.alt = "Sketch";
+        canvas.replaceWith(img);
+      } else {
+        const note = document.createElement("div");
+        note.className = "block-unavailable";
+        note.textContent = "Sketch not available.";
+        canvas.replaceWith(note);
+      }
+    });
+  }
+
+  // Graph blocks only save an empty mount div — the expressions the editor
+  // typed into Desmos are captured separately as data-expressions at save
+  // time. Re-mount each graph read-only (pan/zoom but not editable) from
+  // that saved state.
+  function renderGraphs(container) {
+    const mounts = container.querySelectorAll(".desmos-mount");
+    if (!mounts.length) return;
+    function mountAll() {
+      mounts.forEach((el) => {
+        if (!window.Desmos) {
+          el.innerHTML = '<div class="desmos-error">Graphing tool failed to load.</div>';
+          return;
+        }
+        let expressions = [{ id: "graph1", latex: "f(x)=x^2" }];
+        if (el.dataset.expressions) {
+          try {
+            const parsed = JSON.parse(el.dataset.expressions);
+            if (parsed && parsed.length) expressions = parsed;
+          } catch (err) { /* fall back to default */ }
+        }
+        const calc = window.Desmos.GraphingCalculator(el, {
+          expressions: false, settingsMenu: false, lockViewport: true, zoomButtons: true
+        });
+        expressions.forEach((expr) => calc.setExpression(expr));
+      });
+    }
+    if (window.Desmos) {
+      mountAll();
+    } else {
+      const s = document.createElement("script");
+      s.src = "https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6";
+      s.onload = mountAll;
+      s.onerror = () => mounts.forEach((el) => { el.innerHTML = '<div class="desmos-error">Graphing tool failed to load.</div>'; });
+      document.head.appendChild(s);
+    }
+  }
+
+  // Only attempt guide resolution for paths under /guides/...
+  if (!path.startsWith("guides/")) {
+    showNotFound();
+    return;
+  }
+  const slug = path.slice("guides/".length);
+  if (!slug) {
+    showNotFound();
+    return;
+  }
+
+  fetch(`${API_BASE}/api/guides/${slug}`)
+    .then((res) => {
+      if (!res.ok) throw new Error("not found");
+      return res.json();
+    })
+    .then((guide) => {
+      document.getElementById("loading-view").style.display = "none";
+      document.getElementById("gv-title").textContent = guide.title;
+      const date = new Date(guide.updated_at).toLocaleDateString(undefined, { year: "numeric", month: "long", day: "numeric" });
+      document.getElementById("gv-byline").textContent = `By ${guide.author_username || "an editor"} • ${date}`;
+      const gvBody = document.getElementById("gv-body");
+      gvBody.innerHTML = guide.body || "";
+      sanitizeGuideBody(gvBody);
+      renderGraphs(gvBody);
+      document.getElementById("guide-view").style.display = "block";
+      document.title = `${guide.title} · Cornerstone Guides`;
+
+      if (window.MathJax && window.MathJax.typesetPromise) {
+        window.MathJax.typesetPromise([gvBody]);
+      } else {
+        window.MathJax = { tex: { inlineMath: [["$", "$"]] }, svg: { fontCache: "global" } };
+        const s = document.createElement("script");
+        s.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js";
+        // Don't rely on MathJax's automatic startup typeset — explicitly
+        // typeset once it's actually loaded and ready, so LaTeX reliably
+        // renders on a page's first-ever view instead of only after
+        // MathJax happens to already be loaded (e.g. from the editor).
+        s.onload = () => {
+          if (window.MathJax && window.MathJax.typesetPromise) {
+            window.MathJax.typesetPromise([gvBody]);
+          }
+        };
+        document.head.appendChild(s);
+      }
+    })
+    .catch(() => showNotFound());
+})();
+</script>

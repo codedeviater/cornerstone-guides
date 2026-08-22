@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Cornerstone Guides Admin</title>
+<script
+  async
+  crossorigin="anonymous"
+  src="https://clerk.cornerstoneguides.org/npm/@clerk/ui@1/dist/ui.browser.js"
+  type="text/javascript"
+></script>
+<script
+  async
+  crossorigin="anonymous"
+  data-clerk-publishable-key="pk_live_Y2xlcmsuY29ybmVyc3RvbmVndWlkZXMub3JnJA"
+  src="https://cdn.jsdelivr.net/npm/@clerk/clerk-js@latest/dist/clerk.browser.js"
+  type="text/javascript"
+></script>
+<style>
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  max-width: 900px;
+  margin: 40px auto;
+  padding: 0 20px;
+  color: #222;
+}
+h1 { margin-bottom: 4px; }
+#login-view input {
+  padding: 8px;
+  font-size: 14px;
+  margin-right: 8px;
+}
+button {
+  padding: 8px 14px;
+  font-size: 14px;
+  cursor: pointer;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+th, td {
+  text-align: left;
+  padding: 8px;
+  border-bottom: 1px solid #ddd;
+  vertical-align: top;
+}
+th { background: #f5f5f5; }
+select { padding: 4px; }
+.delete-btn { background: #c0392b; color: #fff; border: none; border-radius: 4px; }
+#error { color: #c0392b; }
+#app-view { display: none; }
+.tabs { display: flex; gap: 8px; margin-bottom: 10px; border-bottom: 1px solid #ddd; }
+.tab-btn { background: none; border: none; padding: 10px 4px; font-size: 14px; cursor: pointer; color: #666; border-bottom: 2px solid transparent; }
+.tab-btn.active { color: #222; font-weight: 600; border-bottom-color: #2c3e50; }
+
+.msg-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.4);
+  align-items: center; justify-content: center; z-index: 50;
+}
+.msg-overlay.open { display: flex; }
+.msg-modal {
+  background: #fff; border-radius: 10px; width: 420px; max-width: 92vw; max-height: 80vh;
+  display: flex; flex-direction: column; padding: 16px;
+}
+.msg-modal h2 { margin: 0 0 10px; font-size: 16px; }
+.msg-list { flex: 1; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; padding: 10px; margin-bottom: 10px; }
+.msg-row { margin-bottom: 10px; font-size: 13px; }
+.msg-row .who { font-weight: 700; font-size: 11px; text-transform: uppercase; color: #666; }
+.msg-row.admin .who { color: #2c3e50; }
+.msg-row.applicant .who { color: #9a6700; }
+.msg-row .when { color: #999; font-size: 11px; margin-left: 6px; }
+.msg-row .body { margin-top: 2px; white-space: pre-wrap; }
+.msg-compose { display: flex; gap: 8px; }
+.msg-compose textarea { flex: 1; padding: 8px; font-size: 13px; resize: vertical; min-height: 44px; }
+.msg-close { margin-top: 10px; align-self: flex-end; background: #eee; border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="login-view">
+  <h1>Cornerstone Guides Admin</h1>
+  <p id="login-checking" style="color:#666;">Checking your account...</p>
+  <div id="login-password-form" style="display:none;">
+    <p>Enter the admin password to continue.</p>
+    <input type="password" id="password-input" placeholder="Password" />
+    <button id="login-btn">Log In</button>
+    <p id="error"></p>
+  </div>
+</div>
+
+<div id="app-view">
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="applications-tab">Applications</button>
+    <button class="tab-btn" data-tab="staff-tab">Staff</button>
+    <button class="tab-btn" data-tab="classes-tab">Classes</button>
+    <button class="tab-btn" data-tab="auto-access-tab">Auto-Access</button>
+    <button class="tab-btn" data-tab="backups-tab">Backups</button>
+  </div>
+
+  <div id="applications-tab" class="tab-panel">
+    <h1>Applications</h1>
+    <button id="refresh-btn">Refresh</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Student ID</th>
+          <th>Reasons</th>
+          <th>Other</th>
+          <th>Coding Exp.</th>
+          <th>Submitted</th>
+          <th>Status</th>
+          <th></th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="applications-body"></tbody>
+    </table>
+  </div>
+
+  <div id="staff-tab" class="tab-panel" style="display:none;">
+    <h1>Staff</h1>
+    <p style="color:#666; font-size:13px;">Staff members get a star next to their name when signed in.</p>
+    <div style="display:flex; gap:8px; margin:14px 0;">
+      <input type="text" id="staff-username-input" placeholder="username" style="flex:1; padding:8px; font-size:14px;" />
+      <button id="add-staff-btn">Add staff</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="staff-body"></tbody>
+    </table>
+  </div>
+
+  <div id="classes-tab" class="tab-panel" style="display:none;">
+    <h1>Classes</h1>
+    <p style="color:#666; font-size:13px;">
+      Used in the editor's class picker (replacing the old free-text Section field), and by students to personalize their homepage.
+    </p>
+    <div style="display:flex; gap:8px; margin:14px 0;">
+      <input type="text" id="class-name-input" placeholder="Class name" style="flex:1; padding:8px; font-size:14px;" />
+      <input type="text" id="class-subject-input" placeholder="Subject (e.g. Math)" style="width:160px; padding:8px; font-size:14px;" />
+      <button id="add-class-btn">Add class</button>
+    </div>
+    <input type="text" id="class-search-input" placeholder="Search classes..." style="width:100%; padding:8px; font-size:14px; margin-bottom:14px;" />
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Subject</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="classes-body"></tbody>
+    </table>
+  </div>
+
+  <div id="auto-access-tab" class="tab-panel" style="display:none;">
+    <h1>Auto-Access</h1>
+    <p style="color:#666; font-size:13px;">
+      Usernames listed here skip the admin password prompt entirely when they open this page —
+      they're let straight in based on being signed in as that username. This is separate from
+      Staff: being staff/editor does <strong>not</strong> grant this. Only add people who should
+      have full admin access without a password.
+    </p>
+    <div style="display:flex; gap:8px; margin:14px 0;">
+      <input type="text" id="auto-access-username-input" placeholder="username" style="flex:1; padding:8px; font-size:14px;" />
+      <button id="add-auto-access-btn">Add</button>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Username</th>
+          <th>Added</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody id="auto-access-body"></tbody>
+    </table>
+  </div>
+
+  <div id="backups-tab" class="tab-panel" style="display:none;">
+    <h1>Backups</h1>
+    <p style="color:#666; font-size:13px;">
+      Guides only. A copy is also committed automatically to GitHub once a day
+      (see the backend's <code>vercel.json</code> and env vars for the schedule/repo).
+    </p>
+
+    <h3 style="margin-top:24px; font-size:15px;">Download a backup now</h3>
+    <p style="color:#666; font-size:13px;">Saves every guide as a single .json file to your computer.</p>
+    <button id="download-backup-btn">Download guides backup</button>
+    <p id="backup-download-status" style="color:#666; font-size:13px;"></p>
+
+    <h3 style="margin-top:32px; font-size:15px;">Restore from a backup file</h3>
+    <p style="color:#666; font-size:13px;">
+      Upload a .json backup (from the button above, or a daily GitHub backup you've downloaded).
+      This only adds/overwrites guides found in the file — it never deletes existing guides.
+    </p>
+    <input type="file" id="restore-file-input" accept="application/json" />
+    <button id="restore-backup-btn">Restore</button>
+    <p id="restore-status" style="color:#666; font-size:13px;"></p>
+  </div>
+</div>
+
+<div class="msg-overlay" id="msg-overlay">
+  <div class="msg-modal">
+    <h2 id="msg-modal-title">Messages</h2>
+    <div class="msg-list" id="msg-list"></div>
+    <div class="msg-compose">
+      <textarea id="msg-compose-input" placeholder="Write a message to the applicant..."></textarea>
+      <button id="msg-send-btn">Send</button>
+    </div>
+    <button class="msg-close" id="msg-close-btn">Close</button>
+  </div>
+</div>
+
+<script>
+const API_BASE = "https://cornerstone-guides-backend.vercel.app";
+
+let token = localStorage.getItem("cg_admin_token");
+let clerk = null;
+
+function showApp() {
+  document.getElementById("login-view").style.display = "none";
+  document.getElementById("app-view").style.display = "block";
+  loadApplications();
+}
+
+async function login(password) {
+  const errorEl = document.getElementById("error");
+  errorEl.textContent = "";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/login`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password })
+    });
+    if (!res.ok) throw new Error("bad password");
+    const data = await res.json();
+    token = data.token;
+    localStorage.setItem("cg_admin_token", token);
+    showApp();
+  } catch (err) {
+    errorEl.textContent = "Incorrect password.";
+  }
+}
+
+async function tryAutoLogin() {
+  try {
+    clerk = window.Clerk;
+    await clerk.load({ ui: { ClerkUI: window.__internal_ClerkUICtor } });
+    if (clerk.user) {
+      const clerkToken = await clerk.session.getToken();
+      const res = await fetch(`${API_BASE}/api/admin/auto-login`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${clerkToken}` }
+      });
+      if (res.ok) {
+        const data = await res.json();
+        token = data.token;
+        localStorage.setItem("cg_admin_token", token);
+        showApp();
+        return;
+      }
+    }
+  } catch (err) {
+    // fall through to the password prompt below — auto-access just isn't
+    // available (not signed in, not on the list, or Clerk failed to load)
+  }
+  document.getElementById("login-checking").style.display = "none";
+  document.getElementById("login-password-form").style.display = "block";
+}
+
+if (token) {
+  showApp();
+} else {
+  window.addEventListener("load", tryAutoLogin);
+}
+
+async function loadApplications() {
+  const body = document.getElementById("applications-body");
+  body.innerHTML = "<tr><td colspan='9'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/applications`, {
+      headers: { "x-admin-token": token }
+    });
+    if (res.status === 401) {
+      localStorage.removeItem("cg_admin_token");
+      location.reload();
+      return;
+    }
+    const apps = await res.json();
+    body.innerHTML = "";
+    apps.forEach(function (a) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${a.name}</td>
+        <td>${a.student_id}</td>
+        <td>${(a.reasons || []).join(", ")}</td>
+        <td>${a.other_reason || ""}</td>
+        <td>${a.coding_experience || ""}</td>
+        <td>${new Date(a.submitted_at).toLocaleString()}</td>
+        <td>
+          <select data-id="${a.id}" class="status-select">
+            <option value="new" ${a.status === "new" ? "selected" : ""}>New</option>
+            <option value="reviewed" ${a.status === "reviewed" ? "selected" : ""}>Reviewed</option>
+            <option value="accepted" ${a.status === "accepted" ? "selected" : ""}>Accepted</option>
+            <option value="rejected" ${a.status === "rejected" ? "selected" : ""}>Rejected</option>
+          </select>
+        </td>
+        <td><button class="delete-btn" data-id="${a.id}">Delete</button></td>
+        <td><button class="msg-btn" data-id="${a.id}" data-name="${a.name}">Messages</button></td>
+      `;
+      body.appendChild(tr);
+    });
+
+    document.querySelectorAll(".status-select").forEach(function (sel) {
+      sel.addEventListener("change", async function () {
+        await fetch(`${API_BASE}/api/admin/applications/${sel.dataset.id}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            "x-admin-token": token
+          },
+          body: JSON.stringify({ status: sel.value })
+        });
+      });
+    });
+
+    document.querySelectorAll(".delete-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        if (!confirm("Delete this application?")) return;
+        await fetch(`${API_BASE}/api/admin/applications/${btn.dataset.id}`, {
+          method: "DELETE",
+          headers: { "x-admin-token": token }
+        });
+        loadApplications();
+      });
+    });
+
+    document.querySelectorAll(".msg-btn").forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        openMessages(btn.dataset.id, btn.dataset.name);
+      });
+    });
+  } catch (err) {
+    body.innerHTML = "<tr><td colspan='9'>Failed to load applications.</td></tr>";
+  }
+}
+
+let activeApplicationId = null;
+
+async function openMessages(applicationId, applicantName) {
+  activeApplicationId = applicationId;
+  document.getElementById("msg-modal-title").textContent = `Messages · ${applicantName}`;
+  document.getElementById("msg-compose-input").value = "";
+  document.getElementById("msg-overlay").classList.add("open");
+  await loadMessages();
+}
+
+async function loadMessages() {
+  const list = document.getElementById("msg-list");
+  list.innerHTML = "Loading...";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/applications/${activeApplicationId}/messages`, {
+      headers: { "x-admin-token": token }
+    });
+    const messages = await res.json();
+    if (!messages.length) {
+      list.innerHTML = "<div style='color:#999; font-size:13px;'>No messages yet.</div>";
+      return;
+    }
+    list.innerHTML = messages.map(function (m) {
+      const who = m.sender === "admin" ? "You" : "Applicant";
+      return `
+        <div class="msg-row ${m.sender}">
+          <span class="who">${who}</span><span class="when">${new Date(m.created_at).toLocaleString()}</span>
+          <div class="body"></div>
+        </div>
+      `;
+    }).join("");
+    // Set body text via textContent to avoid injecting raw HTML from applicant input.
+    const bodies = list.querySelectorAll(".msg-row .body");
+    messages.forEach(function (m, i) { bodies[i].textContent = m.body; });
+    list.scrollTop = list.scrollHeight;
+  } catch (err) {
+    list.innerHTML = "<div style='color:#c0392b;'>Failed to load messages.</div>";
+  }
+}
+
+document.getElementById("msg-send-btn").addEventListener("click", async function () {
+  const input = document.getElementById("msg-compose-input");
+  const body = input.value.trim();
+  if (!body || !activeApplicationId) return;
+  await fetch(`${API_BASE}/api/admin/applications/${activeApplicationId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", "x-admin-token": token },
+    body: JSON.stringify({ body })
+  });
+  input.value = "";
+  loadMessages();
+});
+
+document.getElementById("msg-close-btn").addEventListener("click", function () {
+  document.getElementById("msg-overlay").classList.remove("open");
+  activeApplicationId = null;
+});
+
+document.getElementById("login-btn").addEventListener("click", function () {
+  login(document.getElementById("password-input").value);
+});
+
+document.getElementById("password-input").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") login(this.value);
+});
+
+document.getElementById("refresh-btn").addEventListener("click", loadApplications);
+
+document.querySelectorAll(".tab-btn").forEach(function (btn) {
+  btn.addEventListener("click", function () {
+    document.querySelectorAll(".tab-btn").forEach(function (b) { b.classList.remove("active"); });
+    document.querySelectorAll(".tab-panel").forEach(function (p) { p.style.display = "none"; });
+    btn.classList.add("active");
+    const panel = document.getElementById(btn.dataset.tab);
+    panel.style.display = "block";
+    if (btn.dataset.tab === "staff-tab") loadStaff();
+    if (btn.dataset.tab === "classes-tab") loadClasses();
+    if (btn.dataset.tab === "auto-access-tab") loadAutoAccess();
+  });
+});
+
+async function loadStaff() {
+  const body = document.getElementById("staff-body");
+  body.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/staff`, { headers: { "x-admin-token": token } });
+    if (res.status === 401) {
+      localStorage.removeItem("cg_admin_token");
+      location.reload();
+      return;
+    }
+    const staff = await res.json();
+    if (!staff.length) {
+      body.innerHTML = "<tr><td colspan='3'>No staff added yet.</td></tr>";
+      return;
+    }
+    body.innerHTML = "";
+    staff.forEach(function (s) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.username}</td>
+        <td>${new Date(s.added_at).toLocaleDateString()}</td>
+        <td><button class="delete-btn remove-staff-btn" data-username="${s.username}">Remove</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    document.querySelectorAll(".remove-staff-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        if (!confirm(`Remove ${btn.dataset.username} from staff?`)) return;
+        await fetch(`${API_BASE}/api/admin/staff/${encodeURIComponent(btn.dataset.username)}`, {
+          method: "DELETE",
+          headers: { "x-admin-token": token }
+        });
+        loadStaff();
+      });
+    });
+  } catch (err) {
+    body.innerHTML = "<tr><td colspan='3'>Failed to load staff.</td></tr>";
+  }
+}
+
+document.getElementById("add-staff-btn").addEventListener("click", async function () {
+  const input = document.getElementById("staff-username-input");
+  const username = input.value.trim();
+  if (!username) return;
+  const btn = this;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/staff`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      body: JSON.stringify({ username })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to add staff member.");
+      return;
+    }
+    input.value = "";
+    loadStaff();
+  } catch (err) {
+    alert("Failed to add staff member — check your connection and try again.");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+let allClasses = [];
+
+async function loadClasses() {
+  const body = document.getElementById("classes-body");
+  body.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE}/api/classes`);
+    allClasses = await res.json();
+    renderClasses(allClasses);
+  } catch (err) {
+    body.innerHTML = "<tr><td colspan='3'>Failed to load classes.</td></tr>";
+  }
+}
+
+function renderClasses(list) {
+  const body = document.getElementById("classes-body");
+  if (!list.length) {
+    body.innerHTML = "<tr><td colspan='3'>No classes match.</td></tr>";
+    return;
+  }
+  body.innerHTML = "";
+  list.forEach(function (c) {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${c.name}</td>
+      <td>${c.subject || ""}</td>
+      <td><button class="delete-btn remove-class-btn" data-id="${c.id}" data-name="${c.name}">Remove</button></td>
+    `;
+    body.appendChild(tr);
+  });
+  document.querySelectorAll(".remove-class-btn").forEach(function (btn) {
+    btn.addEventListener("click", async function () {
+      if (!confirm(`Remove "${btn.dataset.name}"? Guides already tagged with it keep the tag, but it'll disappear from the picker.`)) return;
+      await fetch(`${API_BASE}/api/admin/classes/${btn.dataset.id}`, {
+        method: "DELETE",
+        headers: { "x-admin-token": token }
+      });
+      loadClasses();
+    });
+  });
+}
+
+document.getElementById("class-search-input").addEventListener("input", function () {
+  const q = this.value.trim().toLowerCase();
+  const filtered = !q ? allClasses : allClasses.filter(function (c) {
+    return c.name.toLowerCase().includes(q) || (c.subject || "").toLowerCase().includes(q);
+  });
+  renderClasses(filtered);
+});
+
+document.getElementById("add-class-btn").addEventListener("click", async function () {
+  const nameInput = document.getElementById("class-name-input");
+  const subjectInput = document.getElementById("class-subject-input");
+  const name = nameInput.value.trim();
+  const subject = subjectInput.value.trim();
+  if (!name) return;
+  const btn = this;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/classes`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      body: JSON.stringify({ name, subject: subject || null })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to add class.");
+      return;
+    }
+    nameInput.value = "";
+    subjectInput.value = "";
+    loadClasses();
+  } catch (err) {
+    alert("Failed to add class — check your connection and try again.");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+async function loadAutoAccess() {
+  const body = document.getElementById("auto-access-body");
+  body.innerHTML = "<tr><td colspan='3'>Loading...</td></tr>";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/auto-access`, { headers: { "x-admin-token": token } });
+    if (res.status === 401) {
+      localStorage.removeItem("cg_admin_token");
+      location.reload();
+      return;
+    }
+    const list = await res.json();
+    if (!list.length) {
+      body.innerHTML = "<tr><td colspan='3'>No auto-access usernames added yet.</td></tr>";
+      return;
+    }
+    body.innerHTML = "";
+    list.forEach(function (s) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${s.username}</td>
+        <td>${new Date(s.added_at).toLocaleDateString()}</td>
+        <td><button class="delete-btn remove-auto-access-btn" data-username="${s.username}">Remove</button></td>
+      `;
+      body.appendChild(tr);
+    });
+    document.querySelectorAll(".remove-auto-access-btn").forEach(function (btn) {
+      btn.addEventListener("click", async function () {
+        if (!confirm(`Remove ${btn.dataset.username} from auto-access? They'll need the admin password next time.`)) return;
+        await fetch(`${API_BASE}/api/admin/auto-access/${encodeURIComponent(btn.dataset.username)}`, {
+          method: "DELETE",
+          headers: { "x-admin-token": token }
+        });
+        loadAutoAccess();
+      });
+    });
+  } catch (err) {
+    body.innerHTML = "<tr><td colspan='3'>Failed to load auto-access list.</td></tr>";
+  }
+}
+
+document.getElementById("add-auto-access-btn").addEventListener("click", async function () {
+  const input = document.getElementById("auto-access-username-input");
+  const username = input.value.trim();
+  if (!username) return;
+  const btn = this;
+  btn.disabled = true;
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/auto-access`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      body: JSON.stringify({ username })
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      alert(data.error || "Failed to add.");
+      return;
+    }
+    input.value = "";
+    loadAutoAccess();
+  } catch (err) {
+    alert("Failed to add — check your connection and try again.");
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+document.getElementById("download-backup-btn").addEventListener("click", async function () {
+  const status = document.getElementById("backup-download-status");
+  status.textContent = "Preparing backup...";
+  try {
+    const res = await fetch(`${API_BASE}/api/admin/backup/guides`, { headers: { "x-admin-token": token } });
+    if (!res.ok) throw new Error("failed");
+    const data = await res.json();
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    const dateStr = new Date().toISOString().slice(0, 10);
+    a.href = url;
+    a.download = `guides-backup-${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+    status.textContent = `Downloaded ${data.guides.length} guides.`;
+  } catch (err) {
+    status.textContent = "Failed to download backup.";
+  }
+});
+
+document.getElementById("restore-backup-btn").addEventListener("click", async function () {
+  const fileInput = document.getElementById("restore-file-input");
+  const status = document.getElementById("restore-status");
+  const file = fileInput.files[0];
+  if (!file) {
+    status.textContent = "Choose a backup file first.";
+    return;
+  }
+  try {
+    const text = await file.text();
+    const parsed = JSON.parse(text);
+    const guides = Array.isArray(parsed) ? parsed : parsed.guides;
+    if (!Array.isArray(guides)) throw new Error("bad format");
+    if (!confirm(`Restore ${guides.length} guides from this file? Existing guides with matching IDs will be overwritten. Nothing will be deleted.`)) return;
+    status.textContent = "Restoring...";
+    const res = await fetch(`${API_BASE}/api/admin/restore/guides`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-admin-token": token },
+      body: JSON.stringify({ guides })
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      status.textContent = data.error || "Restore failed.";
+      return;
+    }
+    status.textContent = `Restored ${data.restored} guides.`;
+  } catch (err) {
+    status.textContent = "That doesn't look like a valid backup file.";
+  }
+});
+
+</script>
+
+</body>
+</html>
